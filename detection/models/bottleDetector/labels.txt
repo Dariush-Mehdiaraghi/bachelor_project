@@ -1,0 +1,10 @@
+0 Beer
+1 BeerCan
+2 Milk
+3 OrangeJuice
+4 Shampoo
+5 Soap
+6 Water
+7 WineRed
+8 WineWhite
+9 Oil
