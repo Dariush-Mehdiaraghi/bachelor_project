@@ -172,7 +172,7 @@ def main():
 def append_objs_to_img(cv2_im, inference_size, objs, labels):
     height, width, channels = cv2_im.shape
     scale_x, scale_y = width / inference_size[0], height / inference_size[1]
-    foundObjs = []
+    foundObjs = str(len(objs))+ " "
     for obj in objs:
         bbox = obj.bbox.scale(scale_x, scale_y)
         x0, y0 = int(bbox.xmin), int(bbox.ymin)
@@ -180,7 +180,7 @@ def append_objs_to_img(cv2_im, inference_size, objs, labels):
         position= ((x0+x1)/2) / 640 #image_width
         percent = int(100 * obj.score)
         label = '{}% {}'.format(percent, labels.get(obj.id, obj.id))
-        foundObjs.append((str(obj.id),str(position)))
+        foundObjs += str(obj.id) + " " + str(position)
        # foundObject = {"label": obj.id, "position": position}   
        # print(foundObject)
         #os.system("echo '" + str(obj.id)  + " " + str(position) + ";" + "' | pdsend 3000")
