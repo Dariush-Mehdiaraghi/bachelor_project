@@ -15,7 +15,6 @@
 #X obj 512 197 array define \$0-mySample;
 #X obj 296 103 list append \$0-mySample;
 #X msg 296 79 read -resize \$1;
-#X msg 27 85 read -resize samples/test.wav;
 #X obj 296 125 route list;
 #X obj 510 97 tabread4~ \$0-mySample;
 #X obj 295 27 inlet;
@@ -24,10 +23,9 @@
 #X connect 0 0 2 1;
 #X connect 0 0 6 0;
 #X connect 1 0 12 0;
-#X connect 2 0 18 0;
+#X connect 2 0 17 0;
 #X connect 3 0 2 0;
 #X connect 4 0 5 0;
-#X connect 4 0 16 0;
 #X connect 5 0 8 1;
 #X connect 6 0 8 0;
 #X connect 7 0 3 0;
@@ -36,10 +34,9 @@
 #X connect 9 1 6 1;
 #X connect 10 0 11 0;
 #X connect 11 0 9 0;
-#X connect 14 0 17 0;
+#X connect 14 0 16 0;
 #X connect 15 0 14 0;
-#X connect 16 0 14 0;
-#X connect 17 0 0 0;
-#X connect 18 0 1 0;
-#X connect 19 0 20 0;
-#X connect 20 0 15 0;
+#X connect 16 0 0 0;
+#X connect 17 0 1 0;
+#X connect 18 0 19 0;
+#X connect 19 0 15 0;
