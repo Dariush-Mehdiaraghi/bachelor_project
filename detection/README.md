@@ -24,21 +24,14 @@ USB/PCIe/M.2 Accelerator.
     ```
     mkdir google-coral && cd google-coral
 
-    git clone https://github.com/google-coral/examples-camera --depth 1
+    git clone https://github.com/Dariush-Mehdiaraghi/bachelor_project.git
     ```
 
-3.  Download the models:
+
+3.  Install the OpenCV libraries:
 
     ```
-    cd examples-camera
-
-    sh download_models.sh
-    ```
-
-4.  Install the OpenCV libraries:
-
-    ```
-    cd opencv
+    cd detection
 
     bash install_requirements.sh
     ```
@@ -49,7 +42,5 @@ USB/PCIe/M.2 Accelerator.
 ```
 python3 detect.py
 ```
-
-By default, this uses the ```mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite``` model.
 
 You can change the model and the labels file using flags ```--model``` and ```--labels```.
