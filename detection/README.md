@@ -1,4 +1,4 @@
-# OpenCV camera examples with Coral
+# Object detection with Edge TPU
 
 This folder contains example code using [OpenCV](https://github.com/opencv/opencv) to obtain
 camera images and perform object detection on the Edge TPU.
