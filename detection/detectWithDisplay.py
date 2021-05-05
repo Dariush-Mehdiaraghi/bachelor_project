@@ -99,18 +99,18 @@ def main():
     draw.rectangle((0, 0, width, height), outline=0, fill=(0, 0, 0))
     disp.image(image)
     
-    default_model_dir = '../all_models'
-    default_model = 'mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite'
-    default_labels = 'coco_labels.txt'
+    default_model_dir = '../models/bottleDetector'
+    default_model = 'ssdlite_mobiledet_bottle_detector_edgetpu.tflite'
+    default_labels = 'labels.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='.tflite model path',
                         default=os.path.join(default_model_dir,default_model))
     parser.add_argument('--labels', help='label file path',
                         default=os.path.join(default_model_dir, default_labels))
-    parser.add_argument('--top_k', type=int, default=3,
+    parser.add_argument('--top_k', type=int, default=5,
                         help='number of categories with highest score to display')
     parser.add_argument('--camera_idx', type=int, help='Index of which video source to use. ', default = 0)
-    parser.add_argument('--threshold', type=float, default=0.1,
+    parser.add_argument('--threshold', type=float, default=0.5,
                         help='classifier score threshold')
     args = parser.parse_args()
 
@@ -181,8 +181,6 @@ def append_objs_to_img(cv2_im, inference_size, objs, labels):
         percent = int(100 * obj.score)
         label = '{}% {}'.format(percent, labels.get(obj.id, obj.id))
         foundObjs += str(obj.id) + " " + str(position)
-       # foundObject = {"label": obj.id, "position": position}   
-       # print(foundObject)
         #os.system("echo '" + str(obj.id)  + " " + str(position) + ";" + "' | pdsend 3000")
         cv2_im = cv2.rectangle(cv2_im, (x0, y0), (x1, y1), (0, 255, 0), 2)
         cv2_im = cv2.putText(cv2_im, label, (x0, y0+30),
