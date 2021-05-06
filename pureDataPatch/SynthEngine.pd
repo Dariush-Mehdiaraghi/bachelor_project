@@ -1,4 +1,4 @@
-#N canvas 785 383 534 364 12;
+#N canvas 916 604 534 364 12;
 #X msg 171 237 next \$1;
 #X obj 80 21 inlet;
 #X obj 307 21 inlet;
@@ -9,7 +9,7 @@
 #X text 144 21 bang if class detected;
 #X text 369 23 Path to sample;
 #X text 57 321 sound;
-#X obj 171 206 SmoothGate;
+#X obj 171 190 SmoothGate;
 #X connect 0 0 5 0;
 #X connect 1 0 10 0;
 #X connect 2 0 10 1;
