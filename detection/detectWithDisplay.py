@@ -99,8 +99,8 @@ def main():
     draw.rectangle((0, 0, width, height), outline=0, fill=(0, 0, 0))
     disp.image(image)
     
-    default_model_dir = '../models/bottleDetector'
-    default_model = 'ssdlite_mobiledet_bottle_detector_edgetpu.tflite'
+    default_model_dir = 'models/bottleDetector'
+    default_model = 'ssdlite_mobiledet_secondRun_edgetpu.tflite'
     default_labels = 'labels.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='.tflite model path',
