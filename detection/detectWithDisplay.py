@@ -180,7 +180,7 @@ def append_objs_to_img(cv2_im, inference_size, objs, labels):
         position= ((x0+x1)/2) / 640 #image_width
         percent = int(100 * obj.score)
         label = '{}% {}'.format(percent, labels.get(obj.id, obj.id))
-        foundObjs += str(obj.id) + " " + str(position)
+        foundObjs += str(obj.id) + " " + str(position) + " "
         #os.system("echo '" + str(obj.id)  + " " + str(position) + ";" + "' | pdsend 3000")
         cv2_im = cv2.rectangle(cv2_im, (x0, y0), (x1, y1), (0, 255, 0), 2)
         cv2_im = cv2.putText(cv2_im, label, (x0, y0+30),
