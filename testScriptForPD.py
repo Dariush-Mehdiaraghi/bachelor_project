@@ -3,8 +3,8 @@ import time
 import socket
 import sys
 import threading
-os.system("echo '" + "hello from the other side" + ";" + "' | pdsend 3001")
-
+os.system("echo '" + "120" + ";" + "' | pdsend 3001")
+os.system("echo '" + "Arp" + ";" + "' | pdsend 3002")
 # s = socket.socket()
 # host = socket.gethostname()
 # port = 3000

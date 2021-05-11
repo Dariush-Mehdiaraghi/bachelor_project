@@ -79,6 +79,7 @@ def main():
             mixModeVal = min(mixModeVal+1, 100)
         if synthMode == "Arp":
             arpModeVal += 1
+            os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
         print('Encoder incremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
 
         print('Encoder incremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
@@ -90,28 +91,29 @@ def main():
             mixModeVal = max(mixModeVal-1, 0)
         if synthMode == "Arp":
             arpModeVal -= 1
+            os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
         print('Encoder decremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
     def encoderClicked():
         global synthMode
         if synthMode == "Mix":
             synthMode = "Arp"
-            timeZero = time.time()
+          
         else:
             synthMode = "Mix"
+        os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
         print('Encoder clicked currentMode: {}'.format(mode))
-
+    os.system("echo '" + arpModeVal + ";" + "' | pdsend 3001")
     my_encoder = pyky040.Encoder(CLK=4, DT=17, SW=27)
     my_encoder.setup(inc_callback=encoderInc, dec_callback=encoderDec, sw_callback=encoderClicked)
 
     my_thread = threading.Thread(target=my_encoder.watch)
     my_thread.start()
 
-    arpSpeed = (60000/arpModeVal) * 4
-    timeZero = time.time()
+
 
     def serverWatcher():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ('localhost', 3002)
+        server_address = ('localhost', 3003)
         print(f'starting up on {server_address[0]} port {server_address[1]}')
 
         sock.bind(server_address)
@@ -128,8 +130,8 @@ def main():
                         data = data.replace('\n', '').replace(
                             '\t', '').replace('\r', '').replace(';', '')
                         global stepInArp 
-                        stepInArp = int(data)
-                        print(f'received {data}')
+                        if data != '': 
+                            stepInArp = int(data) 
                         if not data:
                             break
             finally:
