@@ -36,6 +36,8 @@ from pycoral.utils.edgetpu import run_inference
 from pyky040 import pyky040
 import threading
 import time
+import socket
+import sys
 synthMode = "Mix"
 mixModeVal = 50
 arpModeVal = 120
@@ -104,33 +106,34 @@ def main():
     my_thread = threading.Thread(target=my_encoder.watch)
     my_thread.start()
 
-    arpSpeed = (60000/aprModeVal) * 4
+    arpSpeed = (60000/arpModeVal) * 4
     timeZero = time.time()
 
     def serverWatcher():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', 3002)
-    print(f'starting up on {server_address[0]} port {server_address[1]}')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = ('localhost', 3002)
+        print(f'starting up on {server_address[0]} port {server_address[1]}')
 
-    sock.bind(server_address)
-    sock.listen(1)
-  
-    while True:
-        print('waiting for a connection')
-        connection, client_address = sock.accept()
-        try:
-                print('client connected:', client_address)
-                while True:
-                    data = connection.recv(16)
-                    data = data.decode("utf-8")
-                    data = data.replace('\n', '').replace(
-                        '\t', '').replace('\r', '').replace(';', '')
-                    global stepInArp = data
-                    print(f'received {data}')
-                    if not data:
-                        break
-        finally:
-            connection.close()
+        sock.bind(server_address)
+        sock.listen(1)
+    
+        while True:
+            print('waiting for a connection')
+            connection, client_address = sock.accept()
+            try:
+                    print('client connected:', client_address)
+                    while True:
+                        data = connection.recv(16)
+                        data = data.decode("utf-8")
+                        data = data.replace('\n', '').replace(
+                            '\t', '').replace('\r', '').replace(';', '')
+                        global stepInArp 
+                        stepInArp = int(data)
+                        print(f'received {data}')
+                        if not data:
+                            break
+            finally:
+                connection.close()
     watcherThread = threading.Thread(target=serverWatcher)
     watcherThread.start()
 
@@ -157,11 +160,15 @@ def main():
     cv2.destroyAllWindows()
 def appendCirclesToImg(cv2_im, inference_size):
     stepsCount = 16
-    for i in range(0,stepsCount-1): 
-        centerCoordinates = (inference_size*2)/stepsCount * i
-        cv2_im = cv2.circle(cv2_im, centerCoordinates, 10, (0,0,0), 3)
+    for i in range(1,stepsCount): 
+        centerCoordinates = (int(((inference_size[0] * 2) / (stepsCount)) * i), inference_size[1])
+        global stepInArp       
+        if (i - 1) == stepInArp:
+            cv2_im = cv2.circle(cv2_im, centerCoordinates, 8, (0,0,0), -1)
+        else:
+            cv2_im = cv2.circle(cv2_im, centerCoordinates, 12, (0,0,0), 2)
     return cv2_im
-    
+
 def append_objs_to_img(cv2_im, inference_size, objs, labels):
     height, width, channels = cv2_im.shape
     scale_x, scale_y = width / inference_size[0], height / inference_size[1]
