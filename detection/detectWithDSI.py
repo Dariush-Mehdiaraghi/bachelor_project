@@ -102,7 +102,7 @@ def main():
             synthMode = "Mix"
         os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
         print('Encoder clicked currentMode: {}'.format(mode))
-    os.system("echo '" + arpModeVal + ";" + "' | pdsend 3001")
+    os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
     my_encoder = pyky040.Encoder(CLK=4, DT=17, SW=27)
     my_encoder.setup(inc_callback=encoderInc, dec_callback=encoderDec, sw_callback=encoderClicked)
 
