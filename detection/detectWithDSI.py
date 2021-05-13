@@ -45,7 +45,7 @@ stepInArp = 0
 
 
 def main():
-    default_model_dir = 'models/bottleDetector'
+    default_model_dir = os.path.join(os.path.dirname(__file__), 'models/bottleDetector')     
     default_model = 'ssdlite_mobiledet_secondRun_edgetpu.tflite'
     default_labels = 'labels.txt'
     parser = argparse.ArgumentParser()
@@ -101,8 +101,8 @@ def main():
         else:
             synthMode = "Mix"
         os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
-        print('Encoder clicked currentMode: {}'.format(mode))
-    os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
+        print('Encoder clicked currentMode: {}'.format(synthMode))
+    os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
     my_encoder = pyky040.Encoder(CLK=4, DT=17, SW=27)
     my_encoder.setup(inc_callback=encoderInc, dec_callback=encoderDec, sw_callback=encoderClicked)
 
@@ -124,6 +124,7 @@ def main():
             connection, client_address = sock.accept()
             try:
                     print('client connected:', client_address)
+                    os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
                     while True:
                         data = connection.recv(16)
                         data = data.decode("utf-8")
@@ -152,7 +153,8 @@ def main():
         objs = get_objects(interpreter, mixModeVal/100)[:args.top_k]
         cv2_im = append_objs_to_img(cv2_im, inference_size, objs, labels)
        # linePos = ((time.time() - timeZero) % arpSpeed ) / inference_size[0] 
-        cv2_im = appendCirclesToImg(cv2_im, inference_size)
+        if synthMode == "Arp":
+            cv2_im = appendCirclesToImg(cv2_im, inference_size)
       #  cv2_im = cv2.line(cv2_im, (int(linePos), 0), (int(linePos), inference_size[1]), (255, 0, 0), 9)
         cv2.imshow('frame', cv2_im)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -174,6 +176,7 @@ def appendCirclesToImg(cv2_im, inference_size):
 def append_objs_to_img(cv2_im, inference_size, objs, labels):
     height, width, channels = cv2_im.shape
     scale_x, scale_y = width / inference_size[0], height / inference_size[1]
+    foundObjs = ""
     for obj in objs:
         bbox = obj.bbox.scale(scale_x, scale_y)
         x0, y0 = int(bbox.xmin), int(bbox.ymin)
@@ -181,10 +184,11 @@ def append_objs_to_img(cv2_im, inference_size, objs, labels):
 
         percent = int(100 * obj.score)
         label = '{}% {}'.format(percent, labels.get(obj.id, obj.id))
-
+        position = ((x0+x1)/2) / (inference_size[0]*2)
+        foundObjs += str(obj.id) + " " + str(position) + " "
         cv2_im = cv2.rectangle(cv2_im, (x0, y0), (x1, y1), (0, 255, 0), 2)
-        cv2_im = cv2.putText(cv2_im, label, (x0, y0+30),
-                             cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 2)
+        cv2_im = cv2.putText(cv2_im, label, (x0, y0+30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 2)
+    os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
     return cv2_im
 
 if __name__ == '__main__':

@@ -1,0 +1,13 @@
+#N canvas 0 25 450 300 12;
+#X obj 154 174 *~ 0.5;
+#X obj 154 126 *~;
+#X obj 154 102 line~;
+#X obj 154 208 outlet~;
+#X obj 154 70 inlet;
+#X text 28 70 line propertys in;
+#X obj 154 150 tabread4~ \$2-mySample;
+#X connect 0 0 3 0;
+#X connect 1 0 6 0;
+#X connect 2 0 1 0;
+#X connect 4 0 2 0;
+#X connect 6 0 0 0;
