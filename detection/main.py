@@ -98,11 +98,10 @@ def main():
 
         sock.bind(server_address)
         sock.listen(1)
-    
         while True:
             print('waiting for a connection')
             connection, client_address = sock.accept()
-            os.system("pd -noadc -jack -rt -nogui ../pureDataPatch/Main.pd")
+
             try:
                     print('client connected:', client_address)
                     os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
@@ -133,6 +132,16 @@ def main():
             run_inference(interpreter, cv2_im_rgb.tobytes())
             global objs
             objs = get_objects(interpreter, mixModeVal/100)[:args.top_k]
+            height, width, channels = cv2_im.shape
+            scale_x, scale_y = width / inference_size[0], height / inference_size[1]
+            foundObjs = ""
+            for obj in objs:
+                bbox = obj.bbox.scale(scale_x, scale_y)
+                x0 = int(bbox.xmin)
+                x1 = int(bbox.xmax)
+                position= ((x0+x1)/2) / 640 #image_width
+                foundObjs += str(obj.id) + " " + str(position) + " "
+            os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
            # append_objs_to_img(cv2_im, inference_size, objs, labels)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

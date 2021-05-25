@@ -1,4 +1,4 @@
-#N canvas 235 311 722 804 12;
+#N canvas 541 354 722 804 12;
 #X obj 296 154 soundfiler;
 #X obj 432 350 loadbang;
 #X obj 432 373 samplerate~;
@@ -32,7 +32,7 @@
 #X obj 525 36 inlet;
 #X obj 481 241 unpack f f;
 #X msg 318 245 -1;
-#X obj 514 519 clone Tabreader 12 \$0;
+#X obj 514 519 clone Tabreader 6 \$0;
 #X connect 0 0 3 0;
 #X connect 0 0 20 0;
 #X connect 1 0 2 0;

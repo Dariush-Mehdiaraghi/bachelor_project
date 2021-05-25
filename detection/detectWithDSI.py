@@ -158,6 +158,16 @@ def main():
             run_inference(interpreter, cv2_im_rgb.tobytes())
             global objs
             objs = get_objects(interpreter, mixModeVal/100)[:args.top_k]
+            height, width, channels = cv2_im.shape
+            scale_x, scale_y = width / inference_size[0], height / inference_size[1]
+            foundObjs = ""
+            for obj in objs:
+                bbox = obj.bbox.scale(scale_x, scale_y)
+                x0 = int(bbox.xmin)
+                x1 = int(bbox.xmax)
+                position= ((x0+x1)/2) / 640 #image_width
+                foundObjs += str(obj.id) + " " + str(position) + " "
+            os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
            # append_objs_to_img(cv2_im, inference_size, objs, labels)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -185,8 +195,8 @@ if __name__ == '__main__':
         
         for index, obj in enumerate(objs):
             bbox = obj.bbox.scale(2, 1.5)
-            x0, y0 = int(bbox.xmin), int(bbox.ymin)
-            x1, y1 = int(bbox.xmax), int(bbox.ymax)
+            x0 = int(bbox.xmin)
+            x1 = int(bbox.xmax)
             position = ((x0+x1)/2)
 
             text(str(labels.get(obj.id, obj.id)), position, 240 )
