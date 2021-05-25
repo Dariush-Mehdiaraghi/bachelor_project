@@ -1,27 +1,5 @@
-# Copyright 2019 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-"""A demo that runs object detection on camera frames using OpenCV.
-TEST_DATA=../all_models
-Run face detection model:
-python3 detect.py \
-  --model ${TEST_DATA}/mobilenet_ssd_v2_face_quant_postprocess_edgetpu.tflite
-Run coco model:
-python3 detect.py \
-  --model ${TEST_DATA}/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite \
-  --labels ${TEST_DATA}/coco_labels.txt
-"""
+import sys, pygame, math
+from pygame import gfxdraw
 import argparse
 import cv2
 import os
@@ -35,10 +13,8 @@ from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.edgetpu import run_inference
 from pyky040 import pyky040
 import threading
-import time
 import socket
-import sys
-from p5 import *
+
 
 synthMode = "Mix"
 mixModeVal = 50
@@ -115,8 +91,6 @@ def main():
     my_thread = threading.Thread(target=my_encoder.watch)
     my_thread.start()
 
-
-
     def serverWatcher():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = ('localhost', 3003)
@@ -128,6 +102,7 @@ def main():
         while True:
             print('waiting for a connection')
             connection, client_address = sock.accept()
+            os.system("pd -noadc -jack -rt -nogui ../pureDataPatch/Main.pd")
             try:
                     print('client connected:', client_address)
                     os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
@@ -167,31 +142,82 @@ def main():
 
     detectObjsThread = threading.Thread(target=detectObjs)
     detectObjsThread.start()
-    print("after starting objs thread")
 
+
+    pygame.init()
+    clock = pygame.time.Clock()
+
+    def drawAALine(X0, X1, color, strokeWidth):
+        #SO answer by Yannis Assael https://stackoverflow.com/questions/30578068/pygame-draw-anti-aliased-thick-line
+        center_L1 = ((X0[0] + X1[0])/ 2, (X0[1] + X1[1])/ 2) 
+        length = lCircleRadius
+        thickness = strokeWidth
+        angle = math.atan2(X0[1] - X1[1], X0[0] - X1[0])
+        UL = (center_L1[0] + (length / 2.) * math.cos(angle) - (thickness / 2.) * math.sin(angle),
+            center_L1[1] + (thickness / 2.) * math.cos(angle) + (length / 2.) * math.sin(angle))
+        UR = (center_L1[0] - (length / 2.) * math.cos(angle) - (thickness / 2.) * math.sin(angle),
+            center_L1[1] + (thickness / 2.) * math.cos(angle) - (length / 2.) * math.sin(angle))
+        BL = (center_L1[0] + (length / 2.) * math.cos(angle) + (thickness / 2.) * math.sin(angle),
+            center_L1[1] - (thickness / 2.) * math.cos(angle) + (length / 2.) * math.sin(angle))
+        BR = (center_L1[0] - (length / 2.) * math.cos(angle) + (thickness / 2.) * math.sin(angle),
+            center_L1[1] - (thickness / 2.) * math.cos(angle) - (length / 2.) * math.sin(angle))
+        pygame.gfxdraw.aapolygon(screen, (UL, UR, BR, BL), color)
+        pygame.gfxdraw.filled_polygon(screen, (UL, UR, BR, BL), color)
+
+    def drawAACircle(surface, pos, radius, color, strokeWidth, strokeColor):
+        pygame.gfxdraw.aacircle(surface, pos[0], pos[1], radius, strokeColor)
+        pygame.gfxdraw.filled_circle(surface, pos[0], pos[1], radius, strokeColor)
+        pygame.gfxdraw.aacircle(surface, pos[0], pos[1], radius-strokeWidth, color)
+        pygame.gfxdraw.filled_circle(surface,  pos[0], pos[1], radius-strokeWidth, color)
+
+    size = width, height = 480, 480
+    backgroundColor = (33,33,33)
+    center = (round(width/2), round(height/2))
+    circleFactor = (math.pi*2) / 640
+    sCircleStroke = 12
+    sCircleRadius = 35
+    lCircleStroke = round(sCircleStroke/2)
+    lCircleRadius = round(width/2 - sCircleRadius) 
+    primaryColor = (255,255,255)
+    colorIdArray = [(255, 202, 98),(200,11,47),(196,196,196), (255,230,0), (255, 98, 98), (24, 242, 125), (89, 106, 255), (237, 48,139), (201,255,132), (19,136,0)]
+    screen = pygame.display.set_mode(size)
+    screen.fill(backgroundColor)
+    background = pygame.Surface((width, height))
+    background.fill(backgroundColor)
+    drawAACircle(background, center, lCircleRadius, backgroundColor, lCircleStroke, primaryColor)
+
+    def update_fps():
+        fps = str(round(clock.get_fps()))
+        print("fps: ", fps)
+
+    def drawDetectionCircle(positionX, objID):
+        x = lCircleRadius * math.cos(positionX * circleFactor) + center[0]
+        y = lCircleRadius * math.sin(positionX * circleFactor) + center[1]
+        pos = (round(x), round(y))
+        circleColor = colorIdArray[objID]
+        drawAALine(pos, center, primaryColor, lCircleStroke/2)
+        drawAACircle(screen, pos, sCircleRadius, circleColor, sCircleStroke, backgroundColor)
+        
+    def drawMiddleCircle():
+        drawAACircle(screen, center, sCircleRadius, backgroundColor, lCircleStroke, primaryColor)
+    def mainDrawLoop():
+        while 1:
+        # update_fps()
+            screen.blit(background, (0,0))
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT: sys.exit()
+            
+            for index, obj in enumerate(objs):
+                bbox = obj.bbox.scale(2, 1.5)
+                drawDetectionCircle(((round(bbox.xmin)+round(bbox.xmax))/2), obj.id)
+            drawMiddleCircle()
+        # clock.tick(60)
+            pygame.display.flip()
+        pygame.quit()
+    mainDrawLoopThread = threading.Thread(target=mainDrawLoop)
+    mainDrawLoopThread.start()
 if __name__ == '__main__':
     main()
-    def setup():
-            size(480, 480)
-            no_stroke()
-            background(0)
-            
 
-    def draw():
-        background(0,0,0)
-
-      
-        text(str(frame_rate), 100, 100)
-        
-        for index, obj in enumerate(objs):
-            bbox = obj.bbox.scale(2, 1.5)
-            x0, y0 = int(bbox.xmin), int(bbox.ymin)
-            x1, y1 = int(bbox.xmax), int(bbox.ymax)
-            position = ((x0+x1)/2)
-
-            text(str(labels.get(obj.id, obj.id)), position, 240 )
-
-       
-    def key_pressed(event):
-        background(204)   
-    run()
+    
