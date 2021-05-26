@@ -32,7 +32,7 @@
 #X msg 1259 26 const -1;
 #X obj 1137 765 metro;
 #X obj 1250 781 hsl 128 15 0 16 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 0 1;
+-1 -1 11112 1;
 #X obj 1141 813 f;
 #X obj 1198 814 + 1;
 #X msg 1134 727 bang;
