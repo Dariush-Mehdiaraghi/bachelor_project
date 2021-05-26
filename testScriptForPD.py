@@ -3,7 +3,7 @@ import time
 import socket
 import sys
 import threading
-os.system("echo '" + "120" + ";" + "' | pdsend 3001")
+os.system("echo '" + "220" + ";" + "' | pdsend 3001")
 os.system("echo '" + "Arp" + ";" + "' | pdsend 3002")
 # s = socket.socket()
 # host = socket.gethostname()
