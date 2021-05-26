@@ -152,7 +152,7 @@ def main():
     detectObjsThread = threading.Thread(target=detectObjs)
     detectObjsThread.start()
 
-
+    os.system("echo '" + "120" + ";" + "' | pdsend 3001")
     pygame.init()
     clock = pygame.time.Clock()
 
