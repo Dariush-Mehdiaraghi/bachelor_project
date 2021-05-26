@@ -32,7 +32,7 @@
 #X obj 525 36 inlet;
 #X obj 481 241 unpack f f;
 #X msg 318 245 -1;
-#X obj 514 519 clone Tabreader 6 \$0;
+#X obj 514 519 clone TabReader 6 \$0;
 #X connect 0 0 3 0;
 #X connect 0 0 20 0;
 #X connect 1 0 2 0;

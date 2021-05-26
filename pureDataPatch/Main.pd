@@ -32,7 +32,7 @@
 #X msg 1259 26 const -1;
 #X obj 1137 765 metro;
 #X obj 1250 781 hsl 128 15 0 16 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 6350 1;
+-1 -1 0 1;
 #X obj 1141 813 f;
 #X obj 1198 814 + 1;
 #X msg 1134 727 bang;
@@ -91,7 +91,7 @@
 #X obj 182 36 symbol \$1;
 #X obj 189 81 select Arp Mix;
 #X obj 228 184 hradio 15 1 0 2 empty empty empty 0 -8 0 10 -262144
--1 -1 0;
+-1 -1 1;
 #X floatatom 296 222 5 0 0 0 - - -;
 #X obj 299 169 bang;
 #X msg 180 149 set 0;
