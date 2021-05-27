@@ -14,7 +14,7 @@ os.system("echo '" + "Arp" + ";" + "' | pdsend 3002")
 
 def serverWatcher():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', 3002)
+    server_address = ('localhost', 3003)
     print(f'starting up on {server_address[0]} port {server_address[1]}')
 
     sock.bind(server_address)

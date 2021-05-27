@@ -137,8 +137,8 @@ def main():
             foundObjs = ""
             for obj in objs:
                 bbox = obj.bbox.scale(scale_x, scale_y)
-                x0 = int(bbox.xmin)
-                x1 = int(bbox.xmax)
+                x0 = round(bbox.xmin)
+                x1 = round(bbox.xmax)
                 position= ((x0+x1)/2) / 640 #image_width
                 foundObjs += str(obj.id) + " " + str(position) + " "
             os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
@@ -199,19 +199,29 @@ def main():
         fps = str(round(clock.get_fps()))
         print("fps: ", fps)
 
+    def getPosOnCircle(position):
+        x = lCircleRadius * math.cos(position * circleFactor) + center[0]
+        y = lCircleRadius * math.sin(position * circleFactor) + center[1]
+        return (round(x), round(y))
     def drawDetectionCircle(positionX, objID):
-        x = lCircleRadius * math.cos(positionX * circleFactor) + center[0]
-        y = lCircleRadius * math.sin(positionX * circleFactor) + center[1]
-        pos = (round(x), round(y))
+        pos = getPosOnCircle(positionX)
         circleColor = colorIdArray[objID]
-        drawAALine(pos, center, primaryColor, lCircleStroke/2)
+        if synthMode == "Mix":
+            drawAALine(pos, center, primaryColor, lCircleStroke/2)
         drawAACircle(screen, pos, sCircleRadius, circleColor, sCircleStroke, backgroundColor)
-        
+    
+    def drawArpModeLine():
+       
+        xPosition = (stepInArp/ 16) * (inference_size[0]*2) 
+        posOnCircle = getPosOnCircle(xPosition)
+        drawAALine(posOnCircle, center, primaryColor, lCircleStroke/2)
+
     def drawMiddleCircle():
         drawAACircle(screen, center, sCircleRadius, backgroundColor, lCircleStroke, primaryColor)
+
     def mainDrawLoop():
         while 1:
-        # update_fps()
+            update_fps()
             screen.blit(background, (0,0))
             
             for event in pygame.event.get():
@@ -220,8 +230,10 @@ def main():
             for index, obj in enumerate(objs):
                 bbox = obj.bbox.scale(2, 1.5)
                 drawDetectionCircle(((round(bbox.xmin)+round(bbox.xmax))/2), obj.id)
+            if synthMode == "Arp":
+                drawArpModeLine()
             drawMiddleCircle()
-        # clock.tick(60)
+            clock.tick(60)
             pygame.display.flip()
         pygame.quit()
     mainDrawLoopThread = threading.Thread(target=mainDrawLoop)
