@@ -1,4 +1,4 @@
-#N canvas 771 609 1149 461 12;
+#N canvas 385 638 1149 461 12;
 #X obj 80 21 inlet;
 #X obj 381 18 inlet;
 #X obj 208 316 outlet~;
@@ -26,12 +26,9 @@
 #X obj 718 65 select 0 1;
 #X text 622 36 Arp: 0 mix 1;
 #X obj 17 61 unpack f f;
-#X msg 65 112 0;
-#X obj 4 135 pack f f;
 #X obj 61 87 select 0;
 #X obj 82 138 del 100;
-#X obj 14 175 list;
-#X obj 114 110 bang;
+#X obj 87 112 bang;
 #X msg 320 92 stop;
 #X connect 0 0 26 0;
 #X connect 0 0 6 0;
@@ -50,7 +47,7 @@
 #X connect 13 0 18 0;
 #X connect 13 0 22 0;
 #X connect 14 0 24 0;
-#X connect 14 0 33 0;
+#X connect 14 0 30 0;
 #X connect 15 0 18 0;
 #X connect 15 0 21 0;
 #X connect 15 0 22 0;
@@ -63,12 +60,8 @@
 #X connect 21 0 12 1;
 #X connect 22 0 16 1;
 #X connect 24 0 13 0;
-#X connect 26 0 28 0;
-#X connect 26 1 29 0;
-#X connect 27 0 28 1;
-#X connect 28 0 31 1;
-#X connect 29 1 32 0;
-#X connect 30 0 31 0;
-#X connect 32 0 30 0;
-#X connect 32 0 27 0;
-#X connect 33 0 11 0;
+#X connect 26 1 27 0;
+#X connect 27 1 29 0;
+#X connect 28 0 30 0;
+#X connect 29 0 28 0;
+#X connect 30 0 11 0;

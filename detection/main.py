@@ -4,7 +4,7 @@ import argparse
 import cv2
 import os
 
-
+from easing_functions import *
 
 from pycoral.adapters.common import input_size
 from pycoral.adapters.detect import get_objects
@@ -15,6 +15,8 @@ from pyky040 import pyky040
 import threading
 import socket
 
+import mido
+port = mido.open_input()
 
 synthMode = "Mix"
 mixModeVal = 50
@@ -180,20 +182,24 @@ def main():
         pygame.gfxdraw.filled_circle(surface,  pos[0], pos[1], radius-strokeWidth, color)
 
     size = width, height = 480, 480
-    backgroundColor = (33,33,33)
+    backgroundColor = (0,0,0) #(33,33,33)
+    primaryColor = (255,255,255)
     center = (round(width/2), round(height/2))
     circleFactor = (math.pi*2) / 640
-    sCircleStroke = 12
+    sCircleStroke = 3 #12
     sCircleRadius = 35
-    lCircleStroke = round(sCircleStroke/2)
+    lCircleStroke = 3 #round(sCircleStroke/2)
     lCircleRadius = round(width/2 - sCircleRadius) 
-    primaryColor = (255,255,255)
+    
     colorIdArray = [(255, 202, 98),(200,11,47),(196,196,196), (255,230,0), (255, 98, 98), (24, 242, 125), (89, 106, 255), (237, 48,139), (201,255,132), (19,136,0)]
     screen = pygame.display.set_mode(size)
     screen.fill(backgroundColor)
     background = pygame.Surface((width, height))
     background.fill(backgroundColor)
     drawAACircle(background, center, lCircleRadius, backgroundColor, lCircleStroke, primaryColor)
+    notesPressed = 0
+   
+    
 
     def update_fps():
         fps = str(round(clock.get_fps()))
@@ -216,14 +222,29 @@ def main():
         posOnCircle = getPosOnCircle(xPosition)
         drawAALine(posOnCircle, center, primaryColor, lCircleStroke/2)
 
+    animationLength = 10
+    animationArray = BackEaseInOut(start=0, end = 10, duration = animationLength)
+    posInAnimation = 0
     def drawMiddleCircle():
-        drawAACircle(screen, center, sCircleRadius, backgroundColor, lCircleStroke, primaryColor)
+        if notesPressed > 0:
+            nonlocal posInAnimation 
+            posInAnimation = min(posInAnimation + 1, animationLength) 
+        else:
+            posInAnimation = max(posInAnimation - 1, 0 ) 
+        drawAACircle(screen, center, sCircleRadius + round(animationArray.ease(posInAnimation)) , backgroundColor, lCircleStroke, primaryColor)
 
     def mainDrawLoop():
+       
         while 1:
-            update_fps()
+            #update_fps()
             screen.blit(background, (0,0))
             
+            for msg in port.iter_pending():
+                nonlocal notesPressed
+                if msg.type == "note_on":
+                    notesPressed += 1
+                if msg.type == "note_off":
+                    notesPressed = max(notesPressed - 1, 0)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: sys.exit()
             
