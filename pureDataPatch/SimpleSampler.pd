@@ -1,4 +1,4 @@
-#N canvas 956 297 722 804 12;
+#N canvas 904 332 722 804 12;
 #X obj 296 154 soundfiler;
 #X obj 432 350 loadbang;
 #X obj 432 373 samplerate~;
@@ -29,14 +29,15 @@
 #X obj 244 310 moses 1;
 #X obj 569 406 / 100;
 #X obj 525 36 inlet;
-#X obj 481 241 unpack f f;
+#X obj 487 230 unpack f f;
 #X msg 318 245 -1;
 #X obj 514 519 clone TabReader 6 \$0;
-#X obj 333 273 ADSR 1 100 900 0 1500;
+#X obj 333 273 ADSR 1 1 100 0 1500;
 #X obj 359 200 r mixmode;
 #X obj 381 222 select 1;
-#X msg 419 244 0;
 #X msg 357 245 100;
+#X msg 419 244 100;
+#X obj 522 285 r avgAttack;
 #X connect 0 0 3 0;
 #X connect 0 0 20 0;
 #X connect 1 0 2 0;
@@ -71,7 +72,8 @@
 #X connect 33 0 24 0;
 #X connect 33 1 26 0;
 #X connect 34 0 35 0;
-#X connect 35 0 37 0;
-#X connect 35 1 36 0;
+#X connect 35 0 36 0;
+#X connect 35 1 37 0;
 #X connect 36 0 33 4;
 #X connect 37 0 33 4;
+#X connect 38 0 33 2;

@@ -3,14 +3,14 @@ import time
 import socket
 import sys
 import threading
-os.system("echo '" + "220" + ";" + "' | pdsend 3001")
-os.system("echo '" + "Arp" + ";" + "' | pdsend 3002")
+
 # s = socket.socket()
 # host = socket.gethostname()
 # port = 3000
 
 # s.connect((host, port))
-
+os.system("echo '" + "120" + ";" + "' | pdsend 3001")
+os.system("echo '" + "Arp" + ";" + "' | pdsend 3002")
 
 def serverWatcher():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,12 +19,13 @@ def serverWatcher():
 
     sock.bind(server_address)
     sock.listen(1)
-  
+
     while True:
         print('waiting for a connection')
         connection, client_address = sock.accept()
         try:
                 print('client connected:', client_address)
+
                 while True:
                     data = connection.recv(16)
                     data = data.decode("utf-8")
@@ -47,9 +48,9 @@ while True:
     # foundObjs += str(3) + " " + str(0.5) + " "
     #foundObjs += str(3) + " " + str(0.0631249) + " "
     #foundObjs += str(2) + " " + str(0.03) + " "
-    foundObjs += str(0) + " " + str(0.5) + " "
-    foundObjs += str(1) + " " + str(0.2) + " "
-    foundObjs += str(2) + " " + str(0.1) + " "
+    foundObjs += str(3) + " " + str(0.5) + " "
+    foundObjs += str(4) + " " + str(0.2) + " "
+    foundObjs += str(5) + " " + str(0.1) + " "
     # foundObjs += str(5) + " " + str(0.6) + " "
     # foundObjs += str(0) + " " + str(0.7) + " "
     #foundObjs += str(2) + " " + str(0.9) + " "
@@ -59,7 +60,7 @@ while True:
     # foundObjs += str(6) + " " + str(0.5) + " "
     #foundObjs += str(0) + " " + str(0) + " "
     os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
-    time.sleep(1)
+    time.sleep(0.5)
     # foundObjs = ""
     # foundObjs += str(9) + " " + str(0.031249) + " "
     # foundObjs += str(0) + " " + str(0.03) + " "

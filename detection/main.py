@@ -62,7 +62,7 @@ def main():
         if synthMode == "Mix":
             mixModeVal = min(mixModeVal+1, 100)
         if synthMode == "Arp":
-            arpModeVal += 1
+            arpModeVal += 11
             os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
         print('Encoder incremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
 
@@ -74,7 +74,7 @@ def main():
         if synthMode == "Mix":
             mixModeVal = max(mixModeVal-1, 0)
         if synthMode == "Arp":
-            arpModeVal -= 1
+            arpModeVal -= 11
             os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
         print('Encoder decremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
     def encoderClicked():
