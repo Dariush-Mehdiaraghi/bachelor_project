@@ -10,7 +10,7 @@ import threading
 
 # s.connect((host, port))
 os.system("echo '" + "120" + ";" + "' | pdsend 3001")
-os.system("echo '" + "Arp" + ";" + "' | pdsend 3002")
+os.system("echo '" + "Mix" + ";" + "' | pdsend 3002")
 
 def serverWatcher():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,15 +42,15 @@ while True:
     foundObjs = ""
     # foundObjs += str(1) + " " + str(0.0631249) + " "
     # foundObjs += str(0) + " " + str(0.03) + " "
-    # foundObjs += str(2) + " " + str(0.09) + " "
-    # foundObjs += str(9) + " " + str(0.9) + " "
-    # foundObjs += str(3) + " " + str(0.4) + " "
-    # foundObjs += str(3) + " " + str(0.5) + " "
+    foundObjs += str(4) + " " + str(0.09) + " "
+    foundObjs += str(5) + " " + str(0.9) + " "
+    foundObjs += str(3) + " " + str(0.4) + " "
+    foundObjs += str(8) + " " + str(0.5) + " "
     #foundObjs += str(3) + " " + str(0.0631249) + " "
     #foundObjs += str(2) + " " + str(0.03) + " "
-    foundObjs += str(3) + " " + str(0.5) + " "
-    foundObjs += str(4) + " " + str(0.2) + " "
-    foundObjs += str(5) + " " + str(0.1) + " "
+    # foundObjs += str(3) + " " + str(0.5) + " "
+    # foundObjs += str(4) + " " + str(0.2) + " "
+    # foundObjs += str(5) + " " + str(0.1) + " "
     # foundObjs += str(5) + " " + str(0.6) + " "
     # foundObjs += str(0) + " " + str(0.7) + " "
     #foundObjs += str(2) + " " + str(0.9) + " "
