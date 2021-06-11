@@ -29,7 +29,7 @@ labels = []
 def main():
     
     default_model_dir = os.path.join(os.path.dirname(__file__), 'models/bottleDetector') 
-    default_model = 'ssdlite_mobiledet_secondRun_edgetpu.tflite'
+    default_model = 'ssdlite_mobiledet_bottle_detector.tflite'
     default_labels = 'labels.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='.tflite model path',
@@ -52,9 +52,7 @@ def main():
     print("inference_size: ", inference_size)
     cap = cv2.VideoCapture(args.camera_idx)
     
-  
-    
-    # Rotary encoder setup
+    # Rotary encoder 
     def encoderInc(scale_position):
         global synthMode
         global mixModeVal
@@ -93,6 +91,7 @@ def main():
     my_thread = threading.Thread(target=my_encoder.watch)
     my_thread.start()
 
+    #getting messages from PD
     def serverWatcher():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = ('localhost', 3003)
@@ -122,6 +121,7 @@ def main():
     watcherThread = threading.Thread(target=serverWatcher)
     watcherThread.start()
 
+    #inferencing 
     def detectObjs():
         while cap.isOpened():
             ret, frame = cap.read()
@@ -155,11 +155,14 @@ def main():
     detectObjsThread.start()
 
     os.system("echo '" + "120" + ";" + "' | pdsend 3001")
+
+    #drawing GUI with pygame
     pygame.init()
     clock = pygame.time.Clock()
 
+    #SO answer by Yannis Assael https://stackoverflow.com/questions/30578068/pygame-draw-anti-aliased-thick-line for drawing a antialiased line
     def drawAALine(X0, X1, color, strokeWidth):
-        #SO answer by Yannis Assael https://stackoverflow.com/questions/30578068/pygame-draw-anti-aliased-thick-line
+        
         center_L1 = ((X0[0] + X1[0])/ 2, (X0[1] + X1[1])/ 2) 
         length = lCircleRadius
         thickness = strokeWidth
@@ -182,15 +185,14 @@ def main():
         pygame.gfxdraw.filled_circle(surface,  pos[0], pos[1], radius-strokeWidth, color)
 
     size = width, height = 480, 480
-    backgroundColor = (0,0,0) #(33,33,33)
+    backgroundColor = (0,0,0) 
     primaryColor = (255,255,255)
     center = (round(width/2), round(height/2))
     circleFactor = (math.pi*2) / 640
-    sCircleStroke = 3 #12
+    sCircleStroke = 3 
     sCircleRadius = 35
-    lCircleStroke = 3 #round(sCircleStroke/2)
+    lCircleStroke = 3 
     lCircleRadius = round(width/2 - sCircleRadius) 
-    
     colorIdArray = [(255, 202, 98),(200,11,47),(196,196,196), (255,230,0), (255, 98, 98), (24, 242, 125), (89, 106, 255), (237, 48,139), (201,255,132), (19,136,0)]
     screen = pygame.display.set_mode(size)
     screen.fill(backgroundColor)
@@ -198,8 +200,6 @@ def main():
     background.fill(backgroundColor)
     drawAACircle(background, center, lCircleRadius, backgroundColor, lCircleStroke, primaryColor)
     notesPressed = 0
-   
-    
 
     def update_fps():
         fps = str(round(clock.get_fps()))
@@ -209,6 +209,7 @@ def main():
         x = lCircleRadius * math.cos(position * circleFactor) + center[0]
         y = lCircleRadius * math.sin(position * circleFactor) + center[1]
         return (round(x), round(y))
+
     def drawDetectionCircle(positionX, objID):
         pos = getPosOnCircle(positionX)
         circleColor = colorIdArray[objID]
@@ -217,7 +218,6 @@ def main():
         drawAACircle(screen, pos, sCircleRadius, circleColor, sCircleStroke, backgroundColor)
     
     def drawArpModeLine():
-       
         xPosition = (stepInArp/ 16) * (inference_size[0]*2) 
         posOnCircle = getPosOnCircle(xPosition)
         drawAALine(posOnCircle, center, primaryColor, lCircleStroke/2)
@@ -225,6 +225,7 @@ def main():
     animationLength = 10
     animationArray = BackEaseInOut(start=0, end = 10, duration = animationLength)
     posInAnimation = 0
+
     def drawMiddleCircle():
         if notesPressed > 0:
             nonlocal posInAnimation 
@@ -233,10 +234,8 @@ def main():
             posInAnimation = max(posInAnimation - 1, 0 ) 
         drawAACircle(screen, center, sCircleRadius + round(animationArray.ease(posInAnimation)) , backgroundColor, lCircleStroke, primaryColor)
 
-    def mainDrawLoop():
-       
+    def mainDrawLoop(): 
         while 1:
-            #update_fps()
             screen.blit(background, (0,0))
             
             for msg in port.iter_pending():
@@ -245,21 +244,23 @@ def main():
                     notesPressed += 1
                 if msg.type == "note_off":
                     notesPressed = max(notesPressed - 1, 0)
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: sys.exit()
             
             for index, obj in enumerate(objs):
                 bbox = obj.bbox.scale(2, 1.5)
                 drawDetectionCircle(((round(bbox.xmin)+round(bbox.xmax))/2), obj.id)
+            
             if synthMode == "Arp":
                 drawArpModeLine()
+            
             drawMiddleCircle()
             clock.tick(60)
             pygame.display.flip()
         pygame.quit()
+    
     mainDrawLoopThread = threading.Thread(target=mainDrawLoop)
     mainDrawLoopThread.start()
 if __name__ == '__main__':
     main()
-
-    

@@ -20,8 +20,8 @@
 #X obj 169 211 *~;
 #X msg 558 113 0;
 #X msg 397 71 0;
-#X obj 458 110 pack f 15;
-#X obj 456 70 del 50;
+#X obj 458 110 pack f 10;
+#X obj 456 70 del 35;
 #X connect 0 0 18 0;
 #X connect 1 0 6 0;
 #X connect 2 0 1 0;
