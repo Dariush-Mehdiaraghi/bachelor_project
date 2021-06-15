@@ -6,7 +6,7 @@ A synthesizer that generates sound with bottles. Built around a Raspberry Pi 4.
 
 ## What? Why?
 This project should offer a new way to engage with soundsynthesis. The synthesizer detects a bottle and changes it's timbre accoridingly to the type of bottle. For example a redwine bottle sounds pretty smooth and elegant. 
-I did this because probably every musician sooner or later runs into a creative blockade (espacially if you only play one instrument like me). This synth should move you away from your normal workflow and makes you look at soundsynthesis less as a combination of a bunch of knobs and more as a combination of a bunch of bottles.
+I did this because probably every musician sooner or later runs into a creative blockade (espacially if you only play one instrument like me). This synth should move you away from your normal workflow and make you look at soundsynthesis less as a combination of a bunch of knobs and more as a combination of a bunch of bottles.
   
 ## Hardware
 The following are the basic hardware components used to build the synth. All the plans for making the enclosure can be found [here](./plans). You will also need some M3x16 skrews and 2.5M spacers.
