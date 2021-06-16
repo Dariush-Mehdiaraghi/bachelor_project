@@ -1,12 +1,12 @@
 
 # Bottle Synth
 
-My project for getting a bachelors degree [@digitalideation](https://github.com/digitalideation)
+My project for getting a bachelors degree [@digitalideation](https://github.com/digitalideation).
 A synthesizer that generates sound with bottles. Built around a Raspberry Pi 4. 
 
 ## What? Why?
 This project should offer a new way to engage with soundsynthesis. The synthesizer detects a bottle and changes it's timbre accoridingly to the type of bottle. For example a redwine bottle sounds pretty smooth and elegant. 
-I did this because probably every musician sooner or later runs into a creative blockade (espacially if you only play one instrument like me). This synth should move you away from your normal workflow and makes you look at soundsynthesis less as a combination of a bunch of knobs and more as a combination of a bunch of bottles.
+I did this because probably every musician sooner or later runs into a creative blockade (espacially if you only play one instrument like me). This synth should move you away from your normal workflow and make you look at soundsynthesis less as a combination of a bunch of knobs and more as a combination of a bunch of bottles.
   
 ## Hardware
 The following are the basic hardware components used to build the synth. All the plans for making the enclosure can be found [here](./plans). You will also need some M3x16 skrews and 2.5M spacers.
@@ -52,14 +52,26 @@ The following are the basic hardware components used to build the synth. All the
     sudo systemctl stop pisound-btn.service
     sudo systemctl disable pisound-btn.service
     ```
-7. To start the synth run the `runSynth.sh` script
 
-8. If you want to start the synth automaticly after boot, modify the `/etc/rc.local` file to start the shell script. Make sure you insert it before `exit 0` and add the `&` at the end of the line so that the boot process can proceed.
+7. To start the pureData patch and the python script when the x server starts add those two lines to the `~/.xinitrc` file .
     ```bash 
-    su patch -c /home/patch/bachelor_project/runSynth.sh &
+    pd -noadc -nogui -jack -rt /home/patch/bachelor_project/pureDataPatch/Main.pd &
+    python3 /home/patch/bachelor_project/detection/main.py
+    ```
+    Now you can start the synth by running
+     ```bash 
+    startx
+    ```
+    And stop it with
+     ```bash 
+    killall xinit
+    ```
+ 9. If you want to start the synth automaticly after boot, modify the `/etc/rc.local` file to start the shell script. Make sure you insert it before `exit 0` and add the `&` at the end of the line so that the boot process can proceed.
+    ```bash 
+    su patch -c startx &
     exit 0
     ```
-9. Connect a midikeyboard get some bottles and make music.
+8. Connect a midikeyboard get some bottles and make music.
 
 ## Training
 The synth is running a SSDmobiledet on the coral edge TPU.
