@@ -28,7 +28,7 @@ stepInArp = 0
 objs = []
 labels = []
 lastTimeClicked = time.time()
-
+lastTimeEncoderPressed = time.time()
 
 def main():
 
@@ -63,6 +63,7 @@ def main():
         global synthMode
         global mixModeVal
         global arpModeVal
+        wakeUp()
         if synthMode == "Mix":
             mixModeVal = min(mixModeVal+1, 100)
         if synthMode == "Arp":
@@ -75,6 +76,7 @@ def main():
         global synthMode
         global mixModeVal
         global arpModeVal
+        wakeUp()
         if synthMode == "Mix":
             mixModeVal = max(mixModeVal-1, 0)
         if synthMode == "Arp":
@@ -85,8 +87,10 @@ def main():
 
     def encoderClicked():
         global synthMode
-        global lastTimeClicked
-        lastTimeClicked = time.time()
+        global lastTimeEncoderPressed
+        
+        lastTimeEncoderPressed = time.time()
+        wakeUp()
         if synthMode == "Mix":
             synthMode = "Arp"
         else:
@@ -95,7 +99,11 @@ def main():
             resumeDetection()
         os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
         print('Encoder clicked currentMode: {}'.format(synthMode))
-
+    def wakeUp():
+        global lastTimeClicked
+        lastTimeClicked = time.time()
+        if detectionPaused:
+            resumeDetection()
     os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
     encoder = pyky040.Encoder(CLK=4, DT=17, SW=27)
     encoder.setup(inc_callback=encoderInc,
@@ -251,6 +259,12 @@ def main():
     sleepImage = pygame.image.load(imageDir + "/sleeping.png")
     sleepImageSize = sleepImage.get_rect().size
 
+    mixImage = pygame.image.load(imageDir + "/mix.png")
+    mixImageSize = mixImage.get_rect().size
+
+    recycleImage = pygame.image.load(imageDir + "/recycle.png")
+    recycleImageSize = recycleImage.get_rect().size
+
     def update_fps():
         fps = str(round(clock.get_fps()))
         print("fps: ", fps)
@@ -260,12 +274,13 @@ def main():
         y = lCircleRadius * math.sin(position * circleFactor) + center[1]
         return (round(x), round(y))
 
-    def drawDetectionCircle(positionX, objID):
-        pos = getPosOnCircle(positionX)
-        circleColor = colorIdArray[objID]
+    def drawDetectionCircle(obj):
+        bbox = obj.bbox.scale(2, 1.5)
+        pos = getPosOnCircle((bbox.xmin+bbox.xmax)/2)
+        circleColor = colorIdArray[obj.id]
         if synthMode == "Mix":
             drawAALine(pos, center, primaryColor, lCircleStroke/2)
-        drawAACircle(screen, pos, sCircleRadius, circleColor,
+        drawAACircle(screen, pos, round(sCircleRadius - sCircleRadius / 2 +  (sCircleRadius * (obj.score - mixModeVal/100))), circleColor,
                      sCircleStroke, backgroundColor)
 
     def drawArpModeLine():
@@ -278,9 +293,16 @@ def main():
     posInAnimation = 0
 
     def drawStateModal():
-
-        screen.blit(
-            sleepImage, (center[0]-(sleepImageSize[0]/2), center[1]-(sleepImageSize[1]/2)))
+        if (time.time() - lastTimeEncoderPressed) < 1:
+            if synthMode == "Mix":
+                screen.blit(
+                    mixImage, (center[0]-(mixImageSize[0]/2), center[1]-(mixImageSize[1]/2)))
+            if synthMode == "Arp":
+                screen.blit(
+                    recycleImage, (center[0]-(recycleImageSize[0]/2), center[1]-(recycleImageSize[1]/2)))
+        if detectionPaused:
+            screen.blit(
+                sleepImage, (center[0]-(sleepImageSize[0]/2), center[1]-(sleepImageSize[1]/2)))
 
     def drawMiddleCircle():
         if notesPressed > 0:
@@ -294,7 +316,7 @@ def main():
     def mainDrawLoop():
         while 1:
             screen.blit(background, (0, 0))
-            if not detectionPaused and (time.time() - lastTimeClicked) > 5:
+            if not detectionPaused and (time.time() - lastTimeClicked) > 30:
                 pauseDetection()
 
             for msg in port.iter_pending():
@@ -311,18 +333,16 @@ def main():
                     sys.exit()
             if not detectionPaused:
                 for index, obj in enumerate(objs):
-                    bbox = obj.bbox.scale(2, 1.5)
-                    drawDetectionCircle(
-                        ((round(bbox.xmin)+round(bbox.xmax))/2), obj.id)
+                    drawDetectionCircle(obj)
 
                 if synthMode == "Arp":
                     drawArpModeLine()
                 drawMiddleCircle()
                 clock.tick(60)
+            drawStateModal()
             if detectionPaused:
-                drawStateModal()
                 clock.tick(1)
-
+            
             pygame.display.flip()
         pygame.quit()
 
