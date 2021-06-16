@@ -1,4 +1,6 @@
-import sys, pygame, math
+import sys
+import pygame
+import math
 from pygame import gfxdraw
 import argparse
 import cv2
@@ -14,6 +16,7 @@ from pycoral.utils.edgetpu import run_inference
 from pyky040 import pyky040
 import threading
 import socket
+import time
 
 import mido
 port = mido.open_input()
@@ -24,21 +27,24 @@ arpModeVal = 120
 stepInArp = 0
 objs = []
 labels = []
+lastTimeClicked = time.time()
 
 
 def main():
-    
-    default_model_dir = os.path.join(os.path.dirname(__file__), 'models/bottleDetector') 
+
+    default_model_dir = os.path.join(
+        os.path.dirname(__file__), 'models/bottleDetector')
     default_model = 'ssdlite_mobiledet_bottle_detector.tflite'
     default_labels = 'labels.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='.tflite model path',
-                        default=os.path.join(default_model_dir,default_model))
+                        default=os.path.join(default_model_dir, default_model))
     parser.add_argument('--labels', help='label file path',
                         default=os.path.join(default_model_dir, default_labels))
     parser.add_argument('--top_k', type=int, default=3,
                         help='number of categories with highest score to display')
-    parser.add_argument('--camera_idx', type=int, help='Index of which video source to use. ', default = 0)
+    parser.add_argument('--camera_idx', type=int,
+                        help='Index of which video source to use. ', default=0)
     parser.add_argument('--threshold', type=float, default=0.1,
                         help='classifier score threshold')
     args = parser.parse_args()
@@ -51,8 +57,8 @@ def main():
     inference_size = input_size(interpreter)
     print("inference_size: ", inference_size)
     cap = cv2.VideoCapture(args.camera_idx)
-    
-    # Rotary encoder 
+
+    # Rotary encoder
     def encoderInc(scale_position):
         global synthMode
         global mixModeVal
@@ -60,11 +66,11 @@ def main():
         if synthMode == "Mix":
             mixModeVal = min(mixModeVal+1, 100)
         if synthMode == "Arp":
-            arpModeVal += 11
+            arpModeVal = min(arpModeVal+10, 1500)
             os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
-        print('Encoder incremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
+        print('Encoder incremented mixVal: {}'.format(
+            mixModeVal) + ' arpVal: {}'.format(arpModeVal))
 
-        print('Encoder incremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
     def encoderDec(scale_position):
         global synthMode
         global mixModeVal
@@ -72,26 +78,34 @@ def main():
         if synthMode == "Mix":
             mixModeVal = max(mixModeVal-1, 0)
         if synthMode == "Arp":
-            arpModeVal -= 11
+            arpModeVal = max(1, arpModeVal - 10)
             os.system("echo '" + str(arpModeVal) + ";" + "' | pdsend 3001")
-        print('Encoder decremented mixVal: {}'.format(mixModeVal) + ' arpVal: {}'.format(arpModeVal) )
+        print('Encoder decremented mixVal: {}'.format(
+            mixModeVal) + ' arpVal: {}'.format(arpModeVal))
+
     def encoderClicked():
         global synthMode
+        global lastTimeClicked
+        lastTimeClicked = time.time()
         if synthMode == "Mix":
             synthMode = "Arp"
-          
         else:
             synthMode = "Mix"
+        if detectionPaused:
+            resumeDetection()
         os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
         print('Encoder clicked currentMode: {}'.format(synthMode))
+
     os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
-    my_encoder = pyky040.Encoder(CLK=4, DT=17, SW=27)
-    my_encoder.setup(inc_callback=encoderInc, dec_callback=encoderDec, sw_callback=encoderClicked)
+    encoder = pyky040.Encoder(CLK=4, DT=17, SW=27)
+    encoder.setup(inc_callback=encoderInc,
+                  dec_callback=encoderDec, sw_callback=encoderClicked)
 
-    my_thread = threading.Thread(target=my_encoder.watch)
-    my_thread.start()
+    encoderThread = threading.Thread(target=encoder.watch)
+    encoderThread.start()
 
-    #getting messages from PD
+    # getting messages from PD
+
     def serverWatcher():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = ('localhost', 3003)
@@ -104,26 +118,53 @@ def main():
             connection, client_address = sock.accept()
 
             try:
-                    print('client connected:', client_address)
-                    os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
-                    while True:
-                        data = connection.recv(16)
-                        data = data.decode("utf-8")
-                        data = data.replace('\n', '').replace(
-                            '\t', '').replace('\r', '').replace(';', '')
-                        global stepInArp 
-                        if data != '': 
-                            stepInArp = int(data) 
-                        if not data:
-                            break
+                print('client connected:', client_address)
+                os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
+                while True:
+                    data = connection.recv(16)
+                    data = data.decode("utf-8")
+                    data = data.replace('\n', '').replace(
+                        '\t', '').replace('\r', '').replace(';', '')
+                    global stepInArp
+                    if data != '':
+                        stepInArp = int(data)
+                    if not data:
+                        break
             finally:
                 connection.close()
     watcherThread = threading.Thread(target=serverWatcher)
     watcherThread.start()
 
-    #inferencing 
+    # inferencing
+    pauseCondition = threading.Condition(threading.Lock())
+    detectionPaused = False
+
+    def pauseDetection():
+        if notesPressed <= 0:
+            os.system("echo '" + "Sleep" + ";" + "' | pdsend 3002")
+            nonlocal detectionPaused
+            detectionPaused = True
+            pauseCondition.acquire()
+            print("going to sleep")
+
+    def resumeDetection():
+        os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
+        global lastTimeClicked
+        lastTimeClicked = time.time()
+        nonlocal detectionPaused
+        if detectionPaused:
+            detectionPaused = False
+            pauseCondition.notify()
+            pauseCondition.release()
+            print("waking up")
+
     def detectObjs():
         while cap.isOpened():
+            with pauseCondition:
+                while detectionPaused:
+                    pauseCondition.wait()
+                    print("after wait")
+
             ret, frame = cap.read()
             if not ret:
                 break
@@ -135,71 +176,80 @@ def main():
             global objs
             objs = get_objects(interpreter, mixModeVal/100)[:args.top_k]
             height, width, channels = cv2_im.shape
-            scale_x, scale_y = width / inference_size[0], height / inference_size[1]
+            scale_x, scale_y = width / \
+                inference_size[0], height / inference_size[1]
             foundObjs = ""
             for obj in objs:
                 bbox = obj.bbox.scale(scale_x, scale_y)
                 x0 = round(bbox.xmin)
                 x1 = round(bbox.xmax)
-                position= ((x0+x1)/2) / 640 #image_width
+                position = ((x0+x1)/2) / 640  # image_width
                 foundObjs += str(obj.id) + " " + str(position) + " "
             os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
-           # append_objs_to_img(cv2_im, inference_size, objs, labels)
+        # append_objs_to_img(cv2_im, inference_size, objs, labels)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
         cap.release()
-        cv2.destroyAllWindows()
 
     detectObjsThread = threading.Thread(target=detectObjs)
     detectObjsThread.start()
 
     os.system("echo '" + "120" + ";" + "' | pdsend 3001")
 
-    #drawing GUI with pygame
+    # drawing GUI with pygame
     pygame.init()
     clock = pygame.time.Clock()
 
-    #SO answer by Yannis Assael https://stackoverflow.com/questions/30578068/pygame-draw-anti-aliased-thick-line for drawing a antialiased line
+    # SO answer by Yannis Assael https://stackoverflow.com/questions/30578068/pygame-draw-anti-aliased-thick-line for drawing a antialiased line
     def drawAALine(X0, X1, color, strokeWidth):
-        
-        center_L1 = ((X0[0] + X1[0])/ 2, (X0[1] + X1[1])/ 2) 
+
+        center_L1 = ((X0[0] + X1[0]) / 2, (X0[1] + X1[1]) / 2)
         length = lCircleRadius
         thickness = strokeWidth
         angle = math.atan2(X0[1] - X1[1], X0[0] - X1[0])
         UL = (center_L1[0] + (length / 2.) * math.cos(angle) - (thickness / 2.) * math.sin(angle),
-            center_L1[1] + (thickness / 2.) * math.cos(angle) + (length / 2.) * math.sin(angle))
+              center_L1[1] + (thickness / 2.) * math.cos(angle) + (length / 2.) * math.sin(angle))
         UR = (center_L1[0] - (length / 2.) * math.cos(angle) - (thickness / 2.) * math.sin(angle),
-            center_L1[1] + (thickness / 2.) * math.cos(angle) - (length / 2.) * math.sin(angle))
+              center_L1[1] + (thickness / 2.) * math.cos(angle) - (length / 2.) * math.sin(angle))
         BL = (center_L1[0] + (length / 2.) * math.cos(angle) + (thickness / 2.) * math.sin(angle),
-            center_L1[1] - (thickness / 2.) * math.cos(angle) + (length / 2.) * math.sin(angle))
+              center_L1[1] - (thickness / 2.) * math.cos(angle) + (length / 2.) * math.sin(angle))
         BR = (center_L1[0] - (length / 2.) * math.cos(angle) + (thickness / 2.) * math.sin(angle),
-            center_L1[1] - (thickness / 2.) * math.cos(angle) - (length / 2.) * math.sin(angle))
+              center_L1[1] - (thickness / 2.) * math.cos(angle) - (length / 2.) * math.sin(angle))
         pygame.gfxdraw.aapolygon(screen, (UL, UR, BR, BL), color)
         pygame.gfxdraw.filled_polygon(screen, (UL, UR, BR, BL), color)
 
     def drawAACircle(surface, pos, radius, color, strokeWidth, strokeColor):
         pygame.gfxdraw.aacircle(surface, pos[0], pos[1], radius, strokeColor)
-        pygame.gfxdraw.filled_circle(surface, pos[0], pos[1], radius, strokeColor)
-        pygame.gfxdraw.aacircle(surface, pos[0], pos[1], radius-strokeWidth, color)
-        pygame.gfxdraw.filled_circle(surface,  pos[0], pos[1], radius-strokeWidth, color)
+        pygame.gfxdraw.filled_circle(
+            surface, pos[0], pos[1], radius, strokeColor)
+        pygame.gfxdraw.aacircle(
+            surface, pos[0], pos[1], radius-strokeWidth, color)
+        pygame.gfxdraw.filled_circle(
+            surface,  pos[0], pos[1], radius-strokeWidth, color)
 
     size = width, height = 480, 480
-    backgroundColor = (0,0,0) 
-    primaryColor = (255,255,255)
+    backgroundColor = (0, 0, 0)
+    primaryColor = (255, 255, 255)
     center = (round(width/2), round(height/2))
     circleFactor = (math.pi*2) / 640
-    sCircleStroke = 3 
+    sCircleStroke = 3
     sCircleRadius = 35
-    lCircleStroke = 3 
-    lCircleRadius = round(width/2 - sCircleRadius) 
-    colorIdArray = [(255, 202, 98),(200,11,47),(196,196,196), (255,230,0), (255, 98, 98), (24, 242, 125), (89, 106, 255), (237, 48,139), (201,255,132), (19,136,0)]
+    lCircleStroke = 3
+    lCircleRadius = round(width/2 - sCircleRadius)
+    colorIdArray = [(255, 202, 98), (200, 11, 47), (196, 196, 196), (255, 230, 0), (255, 98, 98),
+                    (24, 242, 125), (89, 106, 255), (237, 48, 139), (201, 255, 132), (19, 136, 0)]
     screen = pygame.display.set_mode(size)
     screen.fill(backgroundColor)
     background = pygame.Surface((width, height))
     background.fill(backgroundColor)
-    drawAACircle(background, center, lCircleRadius, backgroundColor, lCircleStroke, primaryColor)
+    drawAACircle(background, center, lCircleRadius,
+                 backgroundColor, lCircleStroke, primaryColor)
     notesPressed = 0
+    imageDir = os.path.join(
+        os.path.dirname(__file__), 'images')
+    sleepImage = pygame.image.load(imageDir + "/sleeping.png")
+    sleepImageSize = sleepImage.get_rect().size
 
     def update_fps():
         fps = str(round(clock.get_fps()))
@@ -215,52 +265,70 @@ def main():
         circleColor = colorIdArray[objID]
         if synthMode == "Mix":
             drawAALine(pos, center, primaryColor, lCircleStroke/2)
-        drawAACircle(screen, pos, sCircleRadius, circleColor, sCircleStroke, backgroundColor)
-    
+        drawAACircle(screen, pos, sCircleRadius, circleColor,
+                     sCircleStroke, backgroundColor)
+
     def drawArpModeLine():
-        xPosition = (stepInArp/ 16) * (inference_size[0]*2) 
+        xPosition = (stepInArp / 16) * (inference_size[0]*2)
         posOnCircle = getPosOnCircle(xPosition)
         drawAALine(posOnCircle, center, primaryColor, lCircleStroke/2)
 
     animationLength = 10
-    animationArray = BackEaseInOut(start=0, end = 10, duration = animationLength)
+    animationArray = BackEaseInOut(start=0, end=10, duration=animationLength)
     posInAnimation = 0
+
+    def drawStateModal():
+
+        screen.blit(
+            sleepImage, (center[0]-(sleepImageSize[0]/2), center[1]-(sleepImageSize[1]/2)))
 
     def drawMiddleCircle():
         if notesPressed > 0:
-            nonlocal posInAnimation 
-            posInAnimation = min(posInAnimation + 1, animationLength) 
+            nonlocal posInAnimation
+            posInAnimation = min(posInAnimation + 1, animationLength)
         else:
-            posInAnimation = max(posInAnimation - 1, 0 ) 
-        drawAACircle(screen, center, sCircleRadius + round(animationArray.ease(posInAnimation)) , backgroundColor, lCircleStroke, primaryColor)
+            posInAnimation = max(posInAnimation - 1, 0)
+        drawAACircle(screen, center, sCircleRadius + round(animationArray.ease(
+            posInAnimation)), backgroundColor, lCircleStroke, primaryColor)
 
-    def mainDrawLoop(): 
+    def mainDrawLoop():
         while 1:
-            screen.blit(background, (0,0))
-            
+            screen.blit(background, (0, 0))
+            if not detectionPaused and (time.time() - lastTimeClicked) > 5:
+                pauseDetection()
+
             for msg in port.iter_pending():
                 nonlocal notesPressed
                 if msg.type == "note_on":
                     notesPressed += 1
+                    resumeDetection()
                 if msg.type == "note_off":
                     notesPressed = max(notesPressed - 1, 0)
-            
+                    resumeDetection()
+
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: sys.exit()
-            
-            for index, obj in enumerate(objs):
-                bbox = obj.bbox.scale(2, 1.5)
-                drawDetectionCircle(((round(bbox.xmin)+round(bbox.xmax))/2), obj.id)
-            
-            if synthMode == "Arp":
-                drawArpModeLine()
-            
-            drawMiddleCircle()
-            clock.tick(60)
+                if event.type == pygame.QUIT:
+                    sys.exit()
+            if not detectionPaused:
+                for index, obj in enumerate(objs):
+                    bbox = obj.bbox.scale(2, 1.5)
+                    drawDetectionCircle(
+                        ((round(bbox.xmin)+round(bbox.xmax))/2), obj.id)
+
+                if synthMode == "Arp":
+                    drawArpModeLine()
+                drawMiddleCircle()
+                clock.tick(60)
+            if detectionPaused:
+                drawStateModal()
+                clock.tick(1)
+
             pygame.display.flip()
         pygame.quit()
-    
+
     mainDrawLoopThread = threading.Thread(target=mainDrawLoop)
     mainDrawLoopThread.start()
+
+
 if __name__ == '__main__':
     main()
