@@ -16,7 +16,7 @@
 #X text 272 23 Array name;
 #X obj 213 23 inlet;
 #X text 103 25 Index in array;
-#X obj 519 449 outlet;
+#X obj 519 484 outlet;
 #X obj 347 134 array get;
 #X obj 521 415 f;
 #X obj 524 356 select 1;
@@ -27,6 +27,7 @@
 #X text 273 380 Only triggered when value changed;
 #X obj 418 353 r mixmode;
 #X text 181 298 this line must be connected first ->;
+#X obj 520 451 max 0;
 #X connect 0 0 1 0;
 #X connect 1 0 18 1;
 #X connect 2 0 3 1;
@@ -49,8 +50,8 @@
 #X connect 13 0 18 2;
 #X connect 15 0 18 0;
 #X connect 18 0 5 0;
-#X connect 19 0 17 0;
 #X connect 19 0 22 1;
+#X connect 19 0 28 0;
 #X connect 20 0 24 0;
 #X connect 21 0 22 0;
 #X connect 21 1 23 1;
@@ -58,3 +59,4 @@
 #X connect 23 0 20 0;
 #X connect 24 0 19 0;
 #X connect 26 0 24 0;
+#X connect 28 0 17 0;

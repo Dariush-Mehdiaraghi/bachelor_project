@@ -1,11 +1,11 @@
-#N canvas 960 25 960 1147 12;
+#N canvas 365 25 1555 1147 12;
 #X obj 148 878 dac~;
 #X obj 99 275 notein;
 #X obj 792 34 netreceive 3000;
 #X obj 1153 160 int;
 #X obj 59 404 spigot;
 #X obj 372 601 SynthEngine;
-#X obj 223 611 SynthEngine;
+#X obj 223 612 SynthEngine;
 #X obj 701 116 unpack f f f f f f f f f f f f f;
 #X obj 503 602 SynthEngine;
 #X obj 640 603 SynthEngine;
@@ -142,8 +142,7 @@
 #X obj 365 310 select Arp Mix Sleep;
 #X msg 560 353 0;
 #X msg 514 352 1;
-#X obj 533 283 print sus;
-#X obj 1480 488 print sustain;
+#X msg 1451 728 120;
 #X connect 1 0 21 0;
 #X connect 1 1 21 1;
 #X connect 1 1 36 1;
@@ -210,8 +209,8 @@
 #X connect 22 0 20 3;
 #X connect 25 0 3 0;
 #X connect 26 0 27 0;
-#X connect 26 0 122 2;
 #X connect 26 0 113 2;
+#X connect 26 0 122 2;
 #X connect 26 0 90 2;
 #X connect 27 0 24 0;
 #X connect 28 0 29 0;
@@ -252,6 +251,8 @@
 #X connect 41 0 37 1;
 #X connect 43 0 42 0;
 #X connect 44 0 45 0;
+#X connect 44 0 34 0;
+#X connect 44 0 130 0;
 #X connect 45 0 42 0;
 #X connect 46 0 107 1;
 #X connect 46 0 47 0;
@@ -311,8 +312,8 @@
 #X connect 109 0 20 2;
 #X connect 110 0 94 0;
 #X connect 111 0 110 0;
-#X connect 112 0 122 0;
 #X connect 112 0 113 0;
+#X connect 112 0 122 0;
 #X connect 112 0 90 0;
 #X connect 113 0 116 0;
 #X connect 114 0 115 0;
@@ -321,7 +322,6 @@
 #X connect 118 0 120 0;
 #X connect 119 0 120 0;
 #X connect 122 0 125 0;
-#X connect 122 0 131 0;
 #X connect 123 0 124 0;
 #X connect 124 0 122 1;
 #X connect 127 0 50 0;
@@ -336,3 +336,5 @@
 #X connect 127 2 128 0;
 #X connect 128 0 126 0;
 #X connect 129 0 126 0;
+#X connect 130 0 107 1;
+#X connect 130 0 47 0;

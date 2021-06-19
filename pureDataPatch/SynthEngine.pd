@@ -1,4 +1,4 @@
-#N canvas 452 496 1101 461 12;
+#N canvas 624 636 1101 461 12;
 #X obj 80 21 inlet;
 #X obj 381 18 inlet;
 #X obj 198 344 outlet~;
@@ -11,7 +11,7 @@
 #X obj 197 237 -1;
 #X obj 198 265 pack 0 0 0;
 #X obj 198 209 poly 5 1;
-#X obj 197 307 clone SimpleSampler 6;
+#X obj 197 308 clone SimpleSampler 6;
 #X obj 625 122 bang;
 #X obj 718 36 r mixmode;
 #X obj 543 18 inlet;
@@ -39,6 +39,7 @@
 #X obj 288 137 del 1500;
 #X msg 328 106 stop;
 #X obj 287 108 bang;
+#X obj 480 280 bang;
 #X connect 0 0 6 0;
 #X connect 0 0 25 0;
 #X connect 1 0 6 1;
@@ -77,11 +78,14 @@
 #X connect 28 0 23 0;
 #X connect 29 0 31 0;
 #X connect 30 0 31 2;
+#X connect 30 0 40 0;
 #X connect 31 0 33 0;
 #X connect 32 0 31 1;
+#X connect 32 0 40 0;
 #X connect 33 0 12 2;
 #X connect 34 0 35 0;
 #X connect 36 0 35 0;
 #X connect 37 0 34 0;
 #X connect 38 0 37 0;
 #X connect 39 0 37 0;
+#X connect 40 0 31 0;

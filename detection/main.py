@@ -156,11 +156,11 @@ def main():
             print("going to sleep")
 
     def resumeDetection():
-        os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
         global lastTimeClicked
         lastTimeClicked = time.time()
         nonlocal detectionPaused
         if detectionPaused:
+            os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
             detectionPaused = False
             pauseCondition.notify()
             pauseCondition.release()
