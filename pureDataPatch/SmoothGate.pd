@@ -1,18 +1,18 @@
-#N canvas 1247 598 407 447 12;
+#N canvas 1247 598 523 498 12;
 #X msg 170 70 bang;
 #X obj 173 24 inlet;
 #X obj 56 404 outlet;
 #X obj 75 164 inlet;
-#X obj 211 239 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+#X obj 211 239 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
 1;
 #X obj 53 340 spigot;
 #X obj 133 200 spigot;
 #X obj 211 277 - 1;
 #X obj 247 194 loadbang;
 #X obj 206 138 delay 1200;
-#X obj 228 313 select 0;
-#X obj 229 401 outlet;
-#X msg 238 356 stop;
+#X obj 207 317 select 0;
+#X obj 206 400 outlet;
+#X msg 206 360 stop;
 #X connect 0 0 6 0;
 #X connect 0 0 9 0;
 #X connect 1 0 0 0;

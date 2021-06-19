@@ -66,7 +66,7 @@ The following are the basic hardware components used to build the synth. All the
      ```bash 
     killall xinit
     ```
- 9. If you want to start the synth automaticly after boot, modify the `/etc/rc.local` file to start the shell script. Make sure you insert it before `exit 0` and add the `&` at the end of the line so that the boot process can proceed.
+ 9. If you want to start the synth automaticly after boot, modify the `/etc/rc.local` file to start the x server script. Make sure you insert it before `exit 0` and add the `&` at the end of the line so that the boot process can proceed.
     ```bash 
     su patch -c startx &
     exit 0
