@@ -22,7 +22,6 @@ USB/PCIe/M.2 Accelerator.
 2.  Clone this Git repo onto your computer or Dev Board:
 
     ```
-    mkdir google-coral && cd google-coral
 
     git clone https://github.com/Dariush-Mehdiaraghi/bachelor_project.git
     ```
@@ -40,7 +39,7 @@ USB/PCIe/M.2 Accelerator.
 ## Run the detection demo (SSD models)
 
 ```
-python3 detect.py
+python3 main.py
 ```
 
 You can change the model and the labels file using flags ```--model``` and ```--labels```.
