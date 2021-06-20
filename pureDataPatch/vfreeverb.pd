@@ -1,14 +1,14 @@
 #N canvas 469 40 438 333 10;
-#X obj 85 13 hsl 128 15 0 1 0 1 empty empty 'roomsize' 20 8 0 10 -262144
--260097 -1 11700 0;
+#X obj 85 14 hsl 128 15 0 1 0 1 empty empty 'roomsize' 20 8 0 10 -262144
+-260097 -1 6400 0;
 #X obj 100 56 hsl 128 15 0 2 0 1 empty empty damp 20 8 0 10 -262144
--260097 -1 11800 0;
+-260097 -1 10600 0;
 #X floatatom 91 34 5 0 0 0 - - -;
 #X floatatom 106 76 5 0 0 0 - - -;
 #X obj 130 149 hsl 128 15 0 1 0 1 empty empty wet 20 8 0 10 -262144
--260097 -1 3100 0;
+-260097 -1 10400 0;
 #X obj 115 99 hsl 128 15 0 1 0 1 empty empty dry 20 8 0 10 -262144
--260097 -1 3400 0;
+-260097 -1 12700 0;
 #X floatatom 141 172 5 0 0 0 - - -;
 #X floatatom 120 123 5 0 0 0 - - -;
 #N canvas 92 310 634 321 vfreeverb~ 0;
@@ -765,6 +765,7 @@ milliseconds \, based on samplerate.;
 #X obj 151 275 outlet~;
 #X obj 17 128 inlet~;
 #X obj 45 138 inlet~;
+#X obj 260 121 inlet;
 #X connect 0 0 2 0;
 #X connect 0 0 8 2;
 #X connect 1 0 3 0;
@@ -777,3 +778,4 @@ milliseconds \, based on samplerate.;
 #X connect 8 1 12 0;
 #X connect 13 0 8 0;
 #X connect 14 0 8 1;
+#X connect 15 0 4 0;

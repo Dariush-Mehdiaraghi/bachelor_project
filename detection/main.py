@@ -187,12 +187,16 @@ def main():
             scale_x, scale_y = width / \
                 inference_size[0], height / inference_size[1]
             foundObjs = ""
+            totalDistance = 0
             for obj in objs:
                 bbox = obj.bbox.scale(scale_x, scale_y)
                 x0 = round(bbox.xmin)
                 x1 = round(bbox.xmax)
+                totalDistance += round(bbox.ymax)
                 position = ((x0+x1)/2) / 640  # image_width
                 foundObjs += str(obj.id) + " " + str(position) + " "
+            avgDist = round((min(180, max(0, (640-totalDistance/max(1, len(objs))-160)))/180)*100)/100
+            os.system("echo '" + str(avgDist) + ";" + "' | pdsend 3004")
             os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
         # append_objs_to_img(cv2_im, inference_size, objs, labels)
             if cv2.waitKey(1) & 0xFF == ord('q'):
