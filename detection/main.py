@@ -316,7 +316,7 @@ def main():
     def mainDrawLoop():
         while 1:
             screen.blit(background, (0, 0))
-            if not detectionPaused and (time.time() - lastTimeClicked) > 30:
+            if not detectionPaused and (time.time() - lastTimeClicked) > 60:
                 pauseDetection()
 
             for msg in port.iter_pending():
