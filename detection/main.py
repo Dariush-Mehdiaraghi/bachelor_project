@@ -17,7 +17,7 @@ from pyky040 import pyky040
 import threading
 import socket
 import time
-
+import subprocess
 import mido
 port = mido.open_input()
 
@@ -30,8 +30,8 @@ labels = []
 lastTimeClicked = time.time()
 lastTimeEncoderPressed = time.time()
 
-def main():
 
+def main():
     default_model_dir = os.path.join(
         os.path.dirname(__file__), 'models/bottleDetector')
     default_model = 'ssdlite_mobiledet_bottle_detector.tflite'
@@ -113,35 +113,7 @@ def main():
     encoderThread.start()
 
     # getting messages from PD
-
-    def serverWatcher():
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_address = ('localhost', 3003)
-        print(f'starting up on {server_address[0]} port {server_address[1]}')
-
-        sock.bind(server_address)
-        sock.listen(1)
-        while True:
-            print('waiting for a connection')
-            connection, client_address = sock.accept()
-
-            try:
-                print('client connected:', client_address)
-                os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
-                while True:
-                    data = connection.recv(16)
-                    data = data.decode("utf-8")
-                    data = data.replace('\n', '').replace(
-                        '\t', '').replace('\r', '').replace(';', '')
-                    global stepInArp
-                    if data != '':
-                        stepInArp = int(data)
-                    if not data:
-                        break
-            finally:
-                connection.close()
-    watcherThread = threading.Thread(target=serverWatcher)
-    watcherThread.start()
+   
 
     # inferencing
     pauseCondition = threading.Condition(threading.Lock())
@@ -166,48 +138,7 @@ def main():
             pauseCondition.release()
             print("waking up")
 
-    def detectObjs():
-        while cap.isOpened():
-            with pauseCondition:
-                while detectionPaused:
-                    pauseCondition.wait()
-                    print("after wait")
 
-            ret, frame = cap.read()
-            if not ret:
-                break
-            cv2_im = frame
-
-            cv2_im_rgb = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
-            cv2_im_rgb = cv2.resize(cv2_im_rgb, inference_size)
-            run_inference(interpreter, cv2_im_rgb.tobytes())
-            global objs
-            objs = get_objects(interpreter, mixModeVal/100)[:args.top_k]
-            height, width, channels = cv2_im.shape
-            scale_x, scale_y = width / \
-                inference_size[0], height / inference_size[1]
-            foundObjs = ""
-            totalDistance = 0
-            for obj in objs:
-                bbox = obj.bbox.scale(scale_x, scale_y)
-                x0 = round(bbox.xmin)
-                x1 = round(bbox.xmax)
-                totalDistance += round(bbox.ymax)
-                position = ((x0+x1)/2) / 640  # image_width
-                foundObjs += str(obj.id) + " " + str(position) + " "
-            avgDist = round((min(180, max(0, (640-totalDistance/max(1, len(objs))-160)))/180)*100)/100
-            os.system("echo '" + str(avgDist) + ";" + "' | pdsend 3004")
-            os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
-        # append_objs_to_img(cv2_im, inference_size, objs, labels)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cap.release()
-
-    detectObjsThread = threading.Thread(target=detectObjs)
-    detectObjsThread.start()
-
-    os.system("echo '" + "120" + ";" + "' | pdsend 3001")
 
     # drawing GUI with pygame
     pygame.init()
@@ -352,7 +283,84 @@ def main():
 
     mainDrawLoopThread = threading.Thread(target=mainDrawLoop)
     mainDrawLoopThread.start()
+    time.sleep(10)
+    print("Starting PD ___________________")
+    pathToPD = 'pd'
+    pathToPatch = os.path.join(os.path.dirname(__file__), '../pureDataPatch/Main.pd') 
+    subprocess.Popen([pathToPD, '-nogui', '-noadc', '-jack', '-rt', pathToPatch])
+    pauseDetection()
+    time.sleep(10)
+    def detectObjs():
+        while cap.isOpened():
+            with pauseCondition:
+                while detectionPaused:
+                    pauseCondition.wait()
+                    print("after wait")
 
+            ret, frame = cap.read()
+            if not ret:
+                break
+            cv2_im = frame
+
+            cv2_im_rgb = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
+            cv2_im_rgb = cv2.resize(cv2_im_rgb, inference_size)
+            run_inference(interpreter, cv2_im_rgb.tobytes())
+            global objs
+            objs = get_objects(interpreter, mixModeVal/100)[:args.top_k]
+            height, width, channels = cv2_im.shape
+            scale_x, scale_y = width / \
+                inference_size[0], height / inference_size[1]
+            foundObjs = ""
+            totalDistance = 0
+            for obj in objs:
+                bbox = obj.bbox.scale(scale_x, scale_y)
+                x0 = round(bbox.xmin)
+                x1 = round(bbox.xmax)
+                totalDistance += round(bbox.ymax)
+                position = ((x0+x1)/2) / 640  # image_width
+                foundObjs += str(obj.id) + " " + str(position) + " "
+            avgDist = round((min(180, max(0, (640-totalDistance/max(1, len(objs))-160)))/180)*100)/100
+            os.system("echo '" + str(avgDist) + ";" + "' | pdsend 3004")
+            os.system("echo '" + str(foundObjs) + ";" + "' | pdsend 3000")
+        # append_objs_to_img(cv2_im, inference_size, objs, labels)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        cap.release()
+
+    detectObjsThread = threading.Thread(target=detectObjs)
+    detectObjsThread.start()
+
+    os.system("echo '" + "120" + ";" + "' | pdsend 3001")
+
+    def serverWatcher():
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = ('localhost', 3003)
+        print(f'starting up on {server_address[0]} port {server_address[1]}')
+
+        sock.bind(server_address)
+        sock.listen(1)
+        while True:
+            print('waiting for a connection')
+            connection, client_address = sock.accept()
+
+            try:
+                print('client connected:', client_address)
+                os.system("echo '" + synthMode + ";" + "' | pdsend 3002")
+                while True:
+                    data = connection.recv(16)
+                    data = data.decode("utf-8")
+                    data = data.replace('\n', '').replace(
+                        '\t', '').replace('\r', '').replace(';', '')
+                    global stepInArp
+                    if data != '':
+                        stepInArp = int(data)
+                    if not data:
+                        break
+            finally:
+                connection.close()
+    watcherThread = threading.Thread(target=serverWatcher)
+    watcherThread.start()
 
 if __name__ == '__main__':
     main()
